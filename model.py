@@ -126,6 +126,11 @@ class NNUE(pl.LightningModule):
   def test_step(self, batch, batch_idx):
     self.step_(batch, batch_idx, 'test_loss')
 
+  #def on_epoch_start(self):
+  #   self.trainer.accelerator_backend.setup_optimizers(self)
+
   def configure_optimizers(self):
     optimizer = ranger.Ranger(self.parameters())
-    return optimizer
+    # Drop learning rate after 75 epochs
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75)
+    return [optimizer], [scheduler]
