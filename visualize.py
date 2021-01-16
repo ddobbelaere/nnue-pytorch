@@ -23,7 +23,7 @@ class NNUEVisualizer():
 
         return weight_coalesced
 
-    def plot_input_weights(self, net_name, vmin, vmax, save_dir=None):
+    def plot_input_weights(self, net_name, vmin, vmax, save_dir=None, reorder=None, normalize=True):
         # Coalesce weights and transform them to Numpy domain.
         weights = self.coalesce_ft_weights(self.model, self.model.input)
         weights = weights.transpose(0, 1).flatten().numpy()
@@ -62,24 +62,37 @@ class NNUEVisualizer():
                      kipos[1]+(7-pipos[1])*8]
             d = - 8 if piece < 2 else 48 + (piece // 2 - 1) * 64
             jhd = j % hd
+
+            if reorder is not None:
+                jhd = reorder[jhd]
+
             x = inpos[0] + widthx * ((jhd) % numx) + (piece % 2)*64
             y = inpos[1] + d + widthy * (jhd // numx)
             ii = x + y * totalx
 
             img[ii] = weights[j]
-
+        
+        img = img.reshape((totaldim//totalx, totalx))
+        
         if vmin >= 0:
             img = np.abs(img)
+            cmap = 'viridis'
             title_template = "abs(input weights) [{NETNAME}]"
         else:
+            cmap = 'coolwarm'
             title_template = "input weights [{NETNAME}]"
+
+        if normalize:
+            for i in range(numx):
+                for j in range(numy):
+                    img[j*widthy:(j+1)*widthy,i*widthx:(i+1)*widthx] /= np.max(img[j*widthy:(j+1)*widthy,i*widthx:(i+1)*widthx])
 
         print(" done")
 
         # Plot image.
         plt.figure(figsize=(16, 9))
-        plt.matshow(img.reshape((totaldim//totalx, totalx)),
-                    fignum=0, vmin=vmin, vmax=vmax, cmap='jet')
+        plt.matshow(img,
+                    fignum=0, vmin=vmin, vmax=vmax, cmap=cmap)
         plt.colorbar(fraction=0.046, pad=0.04)
 
         line_options = {'color': 'black', 'linewidth': 0.5}
