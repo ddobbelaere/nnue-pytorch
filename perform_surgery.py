@@ -24,7 +24,7 @@ def perform_surgery(model):
             input_neurons_scale_factor[k] = 0.0
 
         input_neurons_scale_factor[k] = max(
-            input_neurons_scale_factor[k], abs(l1_weights[i, j]))
+            input_neurons_scale_factor[k], abs(l1_weights[i, j])/max_abs_weight)
 
     print(input_neurons_to_rescale)
     print(input_neurons_scale_factor)
